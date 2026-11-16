@@ -1,28 +1,35 @@
-name: Build CrosshairInfo
+name: Build FloatingInfo
 
 on:
   push:
+    branches: [ utama ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java 21
+      - name: Setup Java 21
         uses: actions/setup-java@v5
         with:
-          distribution: temurin
-          java-version: 21
-          cache: maven
+          distribution: 'temurin'
+          java-version: '21'
 
-      - name: Build
-        run: mvn -B clean package
+      - name: Ekstrak Zip & Cari pom.xml
+        run: |
+          unzip -oq ./*.zip -d src_unzip
+          SRC_PATH=$(find src_unzip -name pom.xml -printf "%h\n" | head -n 1)
+          echo "SRC=$SRC_PATH" >> $GITHUB_ENV
 
-      - name: Upload jar
+      - name: Build pakai Maven
+        working-directory: ${{ env.SRC }}
+        run: mvn -B package
+
+      - name: Upload File Jar
         uses: actions/upload-artifact@v4
         with:
-          name: CrosshairInfo-jar
-          path: target/CrosshairInfo-1.0.0.jar
+          name: FloatingInfo-Plugin
+          path: ${{ env.SRC }}/target/*.jar
